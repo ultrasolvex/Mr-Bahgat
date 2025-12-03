@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mr. Bahgat Digital Card</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Almarai:wght@600&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    /* إخفاء الشريط الجانبي */
+    ::-webkit-scrollbar { width: 0; height: 0; }
+    html, body {
+      scrollbar-width: none;
+      -ms-overflow-style: none;
+    }
+
+    body {
+      font-family: 'Almarai', sans-serif;
+      background: linear-gradient(135deg, #000010, #03008a 60%, #000);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      align-items: center;
+      overflow-x: hidden;
+      overflow-y: auto;
+      color: #fff;
+      padding: 30px 15px;
+      position: relative;
+      -webkit-font-smoothing: antialiased;
+      user-select: none;
+      scroll-behavior: smooth;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 200%;
+      height: 200%;
+      background: radial-gradient(circle, rgba(0,255,255,0.15), transparent 70%);
+      z-index: -1;
+      animation: bgMove 15s infinite linear;
+    }
+
+    @keyframes bgMove {
+      0% { transform: translate(-50%, -50%); }
+      100% { transform: translate(-25%, -25%); }
+    }
+
+    /* شاشة الشرف */
+    .honor-popup {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.92);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 99;
+      opacity: 1;
+      transition: opacity 1.5s ease;
+      padding: 20px;
+      overflow: hidden;
+    }
+
+    .honor-popup.hide {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .honor-content {
+      background: linear-gradient(135deg, #0500aa, #0a0a0a);
+      padding: clamp(25px, 6vw, 40px);
+      border-radius: 20px;
+      text-align: center;
+      box-shadow: 0 0 40px rgba(0,255,255,0.6), 0 0 80px rgba(0,255,255,0.25);
+      animation: honorFade 1.8s ease-in-out;
+      max-width: 600px;
+      width: 95%;
+    }
+
+    @keyframes honorFade {
+      from { opacity: 0; transform: scale(0.85); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .honor-content h2 {
+      font-size: clamp(24px, 5vw, 30px);
+      margin-bottom: 25px;
+      color: #00ffff;
+      text-shadow: 0 0 15px rgba(0,255,255,0.4);
+    }
+
+    .person {
+      margin: 18px 0;
+      font-size: clamp(16px, 4vw, 19px);
+      font-weight: bold;
+      color: #fff;
+    }
+
+    .person span {
+      display: block;
+      font-size: clamp(13px, 3.5vw, 15px);
+      font-weight: normal;
+      color: #ccc;
+      margin-top: 4px;
+    }
+
+    /* الكارت */
+    .card {
+      background: rgba(255, 255, 255, 0.06);
+      padding: clamp(20px, 5vw, 30px);
+      border-radius: 20px;
+      box-shadow: 0 12px 40px rgba(0, 255, 255, 0.25);
+      backdrop-filter: blur(20px) saturate(180%);
+      width: 90%;
+      max-width: 420px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.6s ease, transform 0.6s ease;
+      margin: 30px 0;
+      z-index: 1;
+    }
+
+    .card.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .card img {
+      width: clamp(130px, 38vw, 190px);
+      height: clamp(130px, 38vw, 190px);
+      border-radius: 50%;
+      margin-bottom: 20px;
+      border: 3px solid #00ffff;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.65);
+      object-fit: cover;
+      object-position: center 55%;
+    }
+
+    .card h1 {
+      font-size: clamp(20px, 5vw, 26px);
+      font-weight: 600;
+      color: #00ffff;
+      margin: 8px 0 5px;
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.4);
+    }
+
+    /* الاسم في شاشات صغيرة جدًا */
+    @media (max-width: 400px) {
+      .card h1 {
+        white-space: normal;
+        line-height: 1.2;
+      }
+    }
+
+    .card p {
+      font-size: clamp(14px, 4vw, 17px);
+      color: #ccc;
+      margin-bottom: 25px;
+    }
+
+    /* الأيقونات */
+    .links {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 25px;
+      width: 100%;
+    }
+
+    .links a {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 85%;
+      max-width: 300px;
+      height: clamp(48px, 11vw, 58px);
+      background: rgba(255, 255, 255, 0.05);
+      color: #00ffff;
+      font-size: clamp(22px, 6vw, 28px);
+      border-radius: 12px;
+      text-decoration: none;
+      border: 2px solid rgba(0, 255, 255, 0.35);
+      box-shadow: 0 0 10px rgba(0, 255, 255, 0.25);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* الأنيميشن */
+    .links a.show {
+      animation: iconUp 0.6s forwards ease-out;
+    }
+
+    @keyframes iconUp {
+      from { opacity: 0; transform: translateY(30px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* تأثير hover */
+    .links a::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(120deg, transparent, rgba(0,255,255,0.3), transparent);
+      transition: all 0.4s ease;
+    }
+
+    .links a:hover::after {
+      left: 100%;
+    }
+
+    .links a:hover {
+      background: rgba(0, 255, 255, 0.18);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+      transform: translateY(-3px) scale(1.02);
+      border-color: rgba(0, 255, 255, 0.7);
+    }
+
+    /* زر التحميل */
+    .download-btn {
+      display: inline-block;
+      margin-top: 15px;
+      padding: 13px 24px;
+      background: rgba(0, 255, 255, 0.12);
+      color: #00ffff;
+      text-decoration: none;
+      border-radius: 12px;
+      font-size: clamp(15px, 4vw, 17px);
+      border: 1.5px solid rgba(0, 255, 255, 0.35);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-weight: 600;
+    }
+
+    .download-btn:hover {
+      background: rgba(0, 255, 255, 0.25);
+      box-shadow: 0 0 25px rgba(0, 255, 255, 0.5);
+      transform: translateY(-3px);
+    }
+  </style>
+</head>
+<body>
+
+  <div class="honor-popup" id="honorPopup">
+    <div class="honor-content">
+      <h2>Honor Board</h2>
+      <div class="person">
+        Muhammed Rabee
+        <span>Founder & CEO</span>
+      </div>
+      <div class="person">
+        Ahmed Waleed El Saber
+        <span>Co-Founder & Investor</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="mainCard">
+    <img src="Mr.Bahgat.png" alt="Mr. Bahgat">
+    <h1>Mr. Bahgat</h1>
+    <p>Arabic Language Teacher</p>
+
+    <div class="links">
+      <!-- WhatsApp -->
+      <a href="https://wa.me/201015478481" target="_blank">
+        <i class="fab fa-whatsapp"></i>
+      </a>
+      <!-- Facebook -->
+      <a href="https://www.facebook.com/bahgat.elsayed.77?locale=ar_AR" target="_blank">
+        <i class="fab fa-facebook"></i>
+      </a>
+      <!-- Telegram -->
+      <a href="https://t.me/+201015478481" target="_blank">
+        <i class="fab fa-telegram"></i>
+      </a>
+      <!-- Instagram -->
+      <a href="https://www.instagram.com/bahgat.elsayed/" target="_blank">
+        <i class="fab fa-instagram"></i>
+      </a>
+      <!-- Phone Call -->
+      <a href="tel:01015478481" target="_blank">
+        <i class="fas fa-phone"></i>
+      </a>
+    </div>
+
+    <a class="download-btn" id="downloadQR">Download Link</a>
+  </div>
+
+  <script>
+    const honorPopup = document.getElementById("honorPopup");
+    const card = document.getElementById("mainCard");
+    const icons = document.querySelectorAll(".links a");
+
+    // ظهور الكارت بعد شاشة الشرف
+    setTimeout(() => {
+      honorPopup.classList.add("hide");
+      setTimeout(() => {
+        honorPopup.style.display = "none";
+        card.classList.add("show");
+        icons.forEach((icon, i) => {
+          setTimeout(() => icon.classList.add("show"), i * 150);
+        });
+      }, 1000);
+    }, 3000);
+
+    // تحميل الرابط (يمكنك تغيير الـ URL هنا إلى مسار الصفحة الفعلي، مثل https://ultrasolvex.github.io/Mr-Bahgat/)
+    document.getElementById("downloadQR").addEventListener("click", e => {
+      e.preventDefault();
+      const pageUrl = "https://ultrasolvex.github.io/Mr-Bahgat/"; // غير هذا إلى مسار الصفحة الفعلي
+      const blob = new Blob(
+        [`[InternetShortcut]\nURL=${pageUrl}`],
+        { type: "text/plain;charset=utf-8" }
+      );
+      saveAs(blob, "Mr-Bahgat.url");
+    });
+
+    // إغلاق شاشة الشرف بالضغط
+    honorPopup.addEventListener("click", () => {
+      honorPopup.classList.add("hide");
+      setTimeout(() => {
+        honorPopup.style.display = "none";
+        card.classList.add("show");
+        icons.forEach((icon, i) => {
+          setTimeout(() => icon.classList.add("show"), i * 150);
+        });
+      }, 1500);
+    });
+  </script>
+</body>
+</html>
